@@ -11,7 +11,7 @@
 }
 
 .row h2 {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: normal;
   text-align: center;
   color: #666;
@@ -76,10 +76,24 @@ canvas {
   cursor: move;
 }
 
-.wrapper {
-  width: 600px;
-  margin: 1em auto;
-  text-align: left;
+div.wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+div.wrapper:hover img.download {
+    opacity: 1;
+}
+
+img.download {
+    cursor: pointer;
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    opacity: 0;
+    z-index: 2;
+    -webkit-transition: opacity 0.4s linear;
+    transition: opacity 0.4s linear;
 }
 
 .center {
@@ -118,36 +132,45 @@ canvas {
 }
 </style>
 
+<div>Click and Drag!</div>
 <div class="row">
   <h2>Orthographic (90°)</h2>
 </div>
 <div class="row">
-  <h2>Stereographic (170°)</h2>
+  <h2>Stereographic</h2>
 </div>
 <div class="row">
-  <h2>Equirectangular (antemeridian)</h2>
+  <h2>Equirectangular</h2>
 </div>
 <div class="row">
-  <h2>Albers Equal-Area Conic (antemeridian)</h2>
+  <h2>Albers Equal Area</h2>
 </div>
 <div class="row"></div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/d3-geo-projection.v4.min.js"></script>
+<script src="https://unpkg.com/d3-geo-polygon@1"></script>
 <!--<script src="https://d3js.org/d3.v3.min.js"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.0.0/topojson.min.js"></script>
 
 <script>
  var ratio = window.devicePixelRatio || 1,
-     width = 600 * ratio,
-     height = 300 * ratio,
+     width = 300 * ratio,
+     height = 280 * ratio,
      margin = 10,
      graticule = d3.geoGraticule();
 
+ // Note: 89.9 clip angle seems to resolve interior/exterior flipping that
+ // occurs with it set to 90.
  var projections = [
-     d3.geoOrthographic(),
-     d3.geoStereographic(),
+     d3.geoOrthographic().clipAngle(89.9).precision(0.5),
+     d3.geoStereographic().clipAngle(89.9),
      d3.geoEquirectangular(),
+//     d3.geoCylindricalEqualArea(),
+//     d3.geoTetrahedralLee(),
+//     d3.geoPolyhedralWaterman(),
      d3.geoAlbers(),
+//     d3.geoAzimuthalEqualArea(),
  ];
 
  projections.forEach(function(projection) {
@@ -160,76 +183,137 @@ canvas {
  var origin = {x: 0, y: 0};
 
  var combos=[]
- var poly = [30, 15, -30, -15, 80, 60].map(function(d, ii) {
-     var stripe = d3.range(-180, 180, 1).map(function(x) { return [x, d]; });
-     stripe.push(stripe[0]);
 
-     return (ii % 2 == 1) ? stripe.reverse() : stripe;
- });
- combos.push(poly)
+ // Return a stripe at constant latitude
+ function stripe(latitude) {
+     var stripe = d3.range(-180, 180, 1).map(function(x) { return [x, latitude]; });
+     stripe.push(stripe[0]);
+     return stripe
+ }
+
+ function circle(center, radius) {
+     var circle = d3.geoCircle().center(center).radius(radius)().coordinates[0];
+     circle.push(circle[0]);
+     return circle;
+ }
+
+ function multipolygon(polygons) {
+     return { type: "MultiPolygon", coordinates: polygons };
+ }
+
+ // Build nested rings
+ combos.push(
+     multipolygon([
+         [circle([0,0], 50),
+          circle([0,0], 45).reverse()],
+         [circle([0,0], 60),
+          circle([0,0], 55).reverse()],
+         [circle([180,0], 60),
+          circle([180,0], 55).reverse()],
+     ]),
+);
+
+ // Build rings with two holes
+ combos.push(
+     multipolygon([
+         [circle([0,0], 50),
+          circle([15,15], 20).reverse(),
+          circle([-15,-15], 20).reverse()],
+         [circle([0,0], 60),
+          circle([0,0], 55).reverse()],
+     ]),
+ );
 
  d3.json("world-110m.json").then(world => {
-     world = topojson.feature(world, world.objects.land);
-
      var div = d3.selectAll(".row")
                  .data(projections);
 
-     var canvas = div.selectAll("canvas")
-                     .data(function(projection) {
-                         return [
-                             world,
-                             {type: "Polygon", coordinates: combos[0]},
-                             /* {type: "Polygon", coordinates: combos[1]},
-                              * {type: "Polygon", coordinates: combos[2]},
-                              * {type: "Polygon", coordinates: combos[3]}, */
-                         ].map(function(o) {
-                             return [projection, o];
-                         });
-                     })
-                     .enter().append("canvas")
-                     .attr("width", width)
-                     .attr("height", height)
-                     .style("width", width / ratio + "px")
-                     .style("height", height / ratio + "px")
-                     .call(d3.drag()
-                             .on("drag", function(evt, datum) {
-                                 origin.x += evt.dx;
-                                 origin.y += evt.dy;
-                                 update();
-                             })
-                     )
-                     .datum(function(d) {
-                         var canvas = this,
-                             context = canvas.getContext("2d"),
-                             path = d3.geoPath()
-                                      .context(context)
-                                      .projection(d[0]);
+     var count = 0;
+     var divs = div
+         .selectAll("div")
+         .data(function(projection) {
+             return [
+                 topojson.feature(world, world.objects.land),
+                 combos[0],
+                 combos[1],
+                 /* {type: "Polygon", coordinates: combos[2]},
+                  * {type: "Polygon", coordinates: combos[3]}, */
+             ].map(function(o) {
+                 count++;
+                 return {
+                     id: count,
+                     projection: projection,
+                     geometry: o
+                 };
+             });
+         })
+         .enter().append("div")
+         .classed("wrapper", true)
 
-                         return function() {
-                             // Clear canvase and draw background.
-                             context.clearRect(0, 0, width, height);
-                             context.fillStyle = "#eeeeee";
-                             context.beginPath();
-                             path({type: "Sphere"});
-                             context.fill();
+     divs.append("img")
+         .classed("download", true)
+         .attr("src", "download.svg")
+         .datum(function (data) {
+             this.onclick = function() {
+                 var map = document.getElementById("map_" + data.id);
+                 var data_url = map.toDataURL("image/png");
 
-                             // Draw graticule.
-                             context.strokeStyle = "#d0d0d0";
-                             context.lineWidth = 1*ratio;
-                             context.beginPath();
-                             path(graticule());
-                             context.stroke();
+                 // See https://stackoverflow.com/questions/12796513/html5-canvas-to-png-file
+                 data_url.replace(/^data:image\/[^;]*/, 'data:application/octet-stream');
 
-                             // Draw geometry
-                             context.strokeStyle = "#333333";
-                             context.fillStyle = "#33cc33";
-                             context.lineWidth = .5*ratio;
-                             context.beginPath();
-                             path(d[1]);
-                             context.fill();
-                             context.stroke();
-                         };
-                     });
+                 const a = document.createElement("a");
+                 a.href = data_url;
+                 a.download = "snapshot.png";
+                 a.click();
+             }
+         })
+
+     divs.append("canvas")
+         .classed("map", true)
+         .attr("id", function(data) { return "map_" + data.id; })
+         .attr("width", width)
+         .attr("height", height)
+         .style("width", width / ratio + "px")
+         .style("height", height / ratio + "px")
+         .call(d3.drag()
+                 .on("drag", function(evt, datum) {
+                     origin.x += evt.dx;
+                     origin.y += evt.dy;
+                     update();
+                 })
+         )
+         .datum(function(data) {
+             var canvas = this,
+                 context = canvas.getContext("2d"),
+                 path = d3.geoPath()
+                          .context(context)
+                          .projection(data.projection);
+
+             return function() {
+                 // Clear canvas and draw background.
+                 context.clearRect(0, 0, width, height);
+                 context.fillStyle = "#eeeeee";
+                 context.beginPath();
+                 path({type: "Sphere"});
+                 context.fill();
+
+                 // Draw graticule.
+                 context.strokeStyle = "#d0d0d0";
+                 context.lineWidth = 1*ratio;
+                 context.beginPath();
+                 path(graticule());
+                 context.stroke();
+
+                 // Draw geometry
+                 context.strokeStyle = "#333333";
+                 context.fillStyle = "#33cc33";
+                 context.lineWidth = .5*ratio;
+                 context.beginPath();
+                 path(data.geometry);
+                 context.fill();
+                 context.stroke();
+             };
+         });
 
 
      function update() {
