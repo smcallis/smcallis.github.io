@@ -1,0 +1,831 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+<title>Floaty McFloatface</title>
+<style>
+ body {
+   margin: 50px;
+   font: 14px/20px sans-serif;
+   cursor: default;
+ }
+
+ a {
+   color: inherit;
+ }
+
+ p {
+   margin: 30px 0;
+ }
+
+ h2 {
+   margin: 60px 0 30px 0;
+ }
+
+ table {
+   border-collapse: collapse;
+   font-size: 20px;
+   line-height: 14px;
+   width: 1px; /* Don't let table grow to full width. */
+ }
+
+ .noselect {
+   user-select: none;
+ }
+
+ td {
+   font: inherit;
+   padding: 0;
+   text-align: center;
+ }
+
+ td.sign           { background: #BBF; color: #99D; }
+ td.exponent       { background: #BFB; color: #9D9; }
+ td.fraction       { background: #FBB; color: #D99; }
+
+ td.sign.set       { background: #BBF; color: black; }
+ td.exponent.set   { background: #BFB; color: black; }
+ td.fraction.set   { background: #FBB; color: black; }
+
+ td.sign.hover     { background: #99D; }
+ td.exponent.hover { background: #9D9; }
+ td.fraction.hover { background: #D99; }
+
+ td.nibble-boundary {
+   border-right: 1px solid #f7f7f7;
+ }
+
+ td.exponent.nibble-boundary {
+   border-right: 1px solid #AEA;
+ }
+
+ td.fraction.nibble-boundary {
+   border-right: 1px solid #EAA;
+ }
+
+ .input td {
+   padding: 5px 2px;
+   font-size: 14px;
+ }
+
+ .zerox-col {
+   vertical-align: bottom;
+ }
+
+ .zerox {
+   height: 26px;
+   line-height: 26px;
+ }
+
+ .output-col {
+   width: 100%;
+   vertical-align: bottom;
+ }
+
+ .hex-col {
+   width: 100%;
+ }
+
+ tr.help {
+   padding-top: 6px;
+   padding-bottom: 20px;
+   align-items: baseline;
+ }
+
+ td.odd, td.even, td.nibble {
+   font-size: 10px;
+   line-height: 6px;
+   border: none;
+ }
+
+ td.nibble.hex {
+   font-family: 'Roboto mono', monospace;
+   font-size: 14px;
+   line-height: 8px;
+   user-select: text;
+ }
+
+ td.odd {
+   background: #f7f7f7;
+ }
+
+ td.even {
+   background: #ddd;
+ }
+
+ td.nibble {
+   background: #f7f7f7;
+ }
+
+ td.dark.nibble {
+   background: #ddd;
+ }
+
+ td.expansion {
+   font-family: 'Roboto Mono', monospace;
+   font-size: 16px;
+   user-select: text;
+   padding: 3px;
+   margin: -3px;
+ }
+
+ td.expansion.exponent sup {
+   font-size: 12px;
+ }
+
+ td.expansion.exponent, td.expansion.fraction {
+   color: #000;
+ }
+
+ td.output {
+   padding: 0px;
+   margin: 0px;
+ }
+
+ tr.bit-input-padding {
+   height: 10px;
+ }
+
+ tr.bit-input td {
+   padding: 10px 0px;
+   font-size: 20px;
+ };
+
+ tr.bit-input {
+ }
+
+ .help {
+   display: flex;
+   align-items: baseline;
+   font-size: 20px;
+   padding-left: 3px;
+   white-space: nowrap;
+ }
+
+ .help sup {
+   font-size: 12px;
+ }
+
+ .help span {
+   padding: 3px;
+   margin: -3px;
+ }
+
+ span.sign { background: #DDF; }
+ span.exponent { background: #DFD; }
+ span.fraction { background: #FDD; }
+
+ .output-box {
+   font-family: 'Roboto mono';
+   display: flex;
+   align-items: baseline;
+   max-width: 300px;
+   background: #fff;
+   border: 1px solid #ddd;
+   border-radius: 3px;
+   padding-left: 0.5rem;
+   overflow: hidden;
+ }
+
+ .output-box .prefix {
+   font-weight: 300;
+   font-size: 16px;
+   color: #999;
+ }
+
+ .output-box input {
+   font-family: inherit;
+   flex-grow: 1;
+   font-size: 16px;
+   background: #fff;
+   border: none;
+   outline: none;
+   padding-bottom: 0px;
+   padding-left: 1px;
+   width: 100%;
+   min-width: 195px;
+ }
+
+ .output-box:focus-within {
+   border-color: #777;
+ }
+
+ span.clear {
+   clear: left;
+   display: block;
+ }
+
+ div.input {
+   float: left;
+   border: 2px solid #ddd;
+   border-radius: 10px;
+   padding: 15px;
+ }
+
+ div#output {
+   margin-top: 20px;
+ }
+
+ div.input-header {
+   font-family: 'Roboto mono', monospace;
+ }
+
+ div.input-header div {
+   float: left;
+ }
+
+ div.input-header div.name {
+   font-size: 20px;
+   margin: 10px 0px;
+   margin-right: 10px
+ }
+
+ div.input-header div.preset {
+   font-size: 16px;
+   border-radius: 3px;
+   border: 1px solid #bbb;
+   background: #f7f7f7;
+   margin: 10px 0px;
+   margin-right: 3px;
+   padding: 0px 3px;
+ }
+
+ div.input-header div.preset.hover {
+   background: #ddd;
+ }
+
+ div.operators {
+   float: left;
+   font-family: 'Roboto mono', monospace;
+   font-size: 30px;
+   margin: 10px;
+ }
+
+ div.operators div {
+   float: left;
+   border-radius: 6px;
+   border: 2px solid #bbb;
+   background: #f7f7f7;
+   margin: 10px 0px;
+   margin-right: 3px;
+   padding: 5px;
+   user-select: none;
+ }
+
+ div.operators div.hover {
+   background: #ddd;
+ }
+
+ div.operators div.selected {
+   background: #bbb;
+   border: 2px solid #777;
+ }
+
+</style>
+</head><body>
+  <h1>Forked from <a href="https://evanw.github.io/float-toy/">Float Toy</a></h1>
+
+  <p>
+    Click on a cell below to toggle bit values, or edit the hex or decimal values directly.
+    Use this to build intuition for the IEEE floating-point format.
+  </p>
+
+  <div class="input">
+    <div data-input="0" class="input-header">
+      <div class="name">Input 1:</div>
+      <div data-value="0" class="preset">0</div>
+      <div data-value="1" class="preset">1</div>
+      <div data-value="Math.PI"  class="preset">&pi;</div>
+      <div data-value="Math.E" class="preset">e</div>
+      <div data-value="parseFloat('Infinity')" class="preset">&infin;</div>
+      <div data-value="parseFloat('NaN')" class="preset">NaN</div>
+    </div>
+    <span class="clear"></span>
+    <div class="input-box">
+      <table>
+        <tbody>
+          <tr class="noselect">
+            <td class="input"><span id="input64_0"></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <span class="clear"></span>
+  <div class="operators">
+    <div data-operator="add">+</div>
+    <div data-operator="sub">-</div>
+    <div data-operator="mul" class="selected">&times;</div>
+    <div data-operator="div">&divide;</div>
+  </div>
+
+  <span class="clear"></span>
+  <div class="input">
+    <div data-input="1" class="input-header">
+      <div class="name">Input 2:</div>
+      <div data-value="0" class="preset">0</div>
+      <div data-value="1" class="preset">1</div>
+      <div data-value="Math.PI"  class="preset">&pi;</div>
+      <div data-value="Math.E" class="preset">e</div>
+      <div data-value="parseFloat('Infinity')" class="preset">&infin;</div>
+      <div data-value="parseFloat('NaN')" class="preset">NaN</div>
+    </div>
+    <span class="clear"></span>
+    <div class="input-box">
+      <table>
+        <tbody>
+          <tr class="noselect">
+            <td class="input"><span id="input64_1"></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="output" class="input">
+    <div class="input-header">
+      <div class="name">= Output:</div>
+    </div>
+    <span class="clear"></span>
+    <div class="input-box">
+      <table>
+        <tbody>
+          <tr class="noselect">
+            <td class="input"><span id="output64"></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+(function () {
+   function reduceNumber(bytes, x) {
+     var copy = bytes.length === 2 ? new Float16Array(1) : bytes.length === 4 ? new Float32Array(1) : new Float64Array(1);
+     copy[0] = +x;
+     var value = copy[0];
+     x = value === 0 && 1 / value === -Infinity ? '-0' : value + '';
+
+     if (x === 'NaN' || x === 'Infinity' || x === '-Infinity') {
+       return x;
+     }
+
+     var parts = /^([+-]?\d+)((?:\.\d+)?)((?:[eE][+-]?\d+)?)$/.exec(x);
+     var whole = parts[1];
+     var fraction = parts[2];
+     var exponent = parts[3];
+
+     // Remove digits one-by-one until the number changes
+     while (fraction.length > 0) {
+       // Try truncating
+       var truncatedFraction = fraction.slice(0, -1);
+       var text = whole + (truncatedFraction !== '.' ? truncatedFraction : '') + exponent;
+       copy[0] = +text;
+       var truncatedValue = copy[0];
+       if (truncatedValue === value) {
+         fraction = truncatedFraction;
+         x = text;
+         continue;
+       }
+
+       // Try rounding
+       var roundedFraction = truncatedFraction;
+       var i = roundedFraction.length - 1;
+       var zero = '0'.charCodeAt(0);
+       while (i > 0) {
+         var c = roundedFraction.charCodeAt(i) - zero;
+         roundedFraction = roundedFraction.slice(0, i) + String.fromCharCode((c + 1) % 10 + zero) + roundedFraction.slice(i + 1);
+         if (c < 9) break; // Do we need to carry?
+         i--;
+       }
+       var text = whole + (roundedFraction !== '.' ? roundedFraction : '') + exponent;
+       copy[0] = +text;
+       var roundedValue = copy[0];
+       if (roundedValue === value) {
+         fraction = roundedFraction;
+         x = text;
+         continue;
+       }
+
+       // Both numbers changed, keep the old value
+       break;
+     }
+
+     return x;
+   }
+
+   function hexChar(byte) {
+     return ('0' + byte.toString(16).toUpperCase()).slice(-2);
+   }
+
+   function toHexString(byteArray) {
+     return Array.from(byteArray, hexChar).join('');
+   }
+
+   function toByteArray(hexString) {
+     var result = [];
+     if (hexString.length % 2 == 1) {
+       hexString = hexString + '0';
+     }
+     for (var i = 0; i < hexString.length; i += 2) {
+       result.push(parseInt(hexString.substr(i, 2), 16));
+     }
+     return result;
+   }
+
+   class Floater {
+     onvaluechange = null;
+
+     constructor(input, editable=true) {
+       this.array = new Float64Array([Math.PI]);
+       this.bytes = new Uint8Array(this.array.buffer);
+       this.hexLength = this.bytes.length;
+       this.editable = editable;
+
+       this.input = input;
+       this.exponentBits = 11;
+       this.populateHtml();
+
+       this.hex = input.querySelector('input.hex.output');
+       this.output = input.querySelector('input.expansion.output');;
+
+       // Grab elements
+       this.bit_elements = [];
+       this.hex_elements = [];
+       for (var i = 0; i < this.bytes.length * 8; i++) {
+         var element = input.querySelector('[data-bit-index="' + i + '"]');
+         if (this.editable) {
+           element.onmouseover = function () { this.classList.add('hover'); };
+           element.onmouseout = function () { this.classList.remove('hover'); };
+         }
+         this.bit_elements.push(element);
+       }
+
+       for (var i = 0; i < this.bytes.length*2; i++) {
+         var element = input.querySelector('[data-nibble-index="' + i + '"]');
+         this.hex_elements.push(element);
+       }
+
+       if (this.editable) {
+         this.addEventHandlers();
+       }
+       this.render();
+     }
+
+     render() {
+       var bytes = this.bytes;
+
+       for (var i = 0; i < bytes.length * 8; i++) {
+         var is_set = (bytes[bytes.length - (i >> 3) - 1] >> (7 - (i & 7))) & 1;
+         this.bit_elements[i].textContent = is_set ? "1" : "0";
+         this.bit_elements[i].classList.toggle("set", is_set);
+       }
+
+       for (var i = 0; i < bytes.length; i++) {
+         var byte = bytes.length-i-1;
+         this.hex_elements[2*i+0].textContent = hexChar(bytes[byte])[0];
+         this.hex_elements[2*i+1].textContent = hexChar(bytes[byte])[1];
+       }
+
+       // Figure out exponent
+       var exponent = 0;
+       for (var i = 0; i < this.exponentBits; i++) {
+         var index = 1 + i;
+         var bit = (bytes[bytes.length - (index >> 3) - 1] >> (7 - (index & 7))) & 1;
+         exponent += bit << (this.exponentBits - i - 1);
+       }
+       var exponentBias = (1 << (this.exponentBits - 1)) - 1;
+       exponent -= exponentBias;
+
+       // Figure out fraction
+       var copyBytes = new Uint8Array(bytes);
+       var copy = bytes.length === 2 ? new Float16Array(copyBytes.buffer) : bytes.length === 4 ? new Float32Array(copyBytes.buffer) : new Float64Array(copyBytes.buffer);
+       for (var i = 0; i < this.exponentBits; i++) {
+         var index = 1 + i;
+         var byteIndex = bytes.length - (index >> 3) - 1;
+         var byteMask = 1 << (7 - (index & 7));
+         copyBytes[byteIndex] = (copyBytes[byteIndex] & ~byteMask) | (i === 0 ? 0 : byteMask);
+       }
+       var signIndex = bytes.length - 1;
+       var signMask = 0x80;
+       var sign = copyBytes[signIndex] & signMask;
+       copyBytes[signIndex] &= ~signMask;
+       var fraction = copy[0];
+
+       // Handle denormal numbers
+       if (exponent === -exponentBias) {
+         exponent++;
+         fraction--;
+       }
+
+       var signElement = this.input.querySelector("td.expansion.sign");
+       signElement.classList.toggle("set", sign);
+       signElement.textContent = sign ? "-" : "+";
+
+       var expElement = this.input.querySelector("td.expansion.exponent");
+       expElement.innerHTML = `2<sup>${exponent}</sup>`;
+
+       var fracElement = this.input.querySelector("td.expansion.fraction");
+       fracElement.textContent = reduceNumber(bytes, fraction);
+
+       // Update views according to which input was edited
+       if (document.activeElement === this.hex) {
+         var value = this.value;
+         this.output.value = reduceNumber(bytes, value === 0 && 1 / value === -Infinity ? '-0' : value);
+       } else if (document.activeElement === this.output) {
+         var tmpBytes = bytes.slice().reverse();
+         this.hex.value = toHexString(tmpBytes);
+       } else { // This branch is for when the individual bits get toggled
+         var value = this.value;
+         this.output.value = reduceNumber(bytes, value === 0 && 1 / value === -Infinity ? '-0' : value);
+         var tmpBytes = bytes.slice().reverse();
+         this.hex.value = toHexString(tmpBytes);
+       }
+     }
+
+     extractNumber() {
+       return +(this.output.value.replace(/\b(?:infinity|inf)\b/gi, 'Infinity'));
+     }
+
+     bitPaddingRow() {
+       // Padding around bits
+       var html = '<tr class="bit-input-padding">';
+       for (var i = 0; i < this.bytes.length; i++) {
+         for (var j = 0; j < 8; j++) {
+           var index = i * 8 + j;
+           var className = "";
+           if (index != 63 && (63-index) % 4 == 0) {
+             className += " nibble-boundary";
+           }
+
+           html += `<td class="${className}"></td>`;
+         }
+       }
+       html += '</tr>';
+       return html;
+     }
+
+     populateHtml() {
+       var html = '<table>';
+       // Tens digits for bits numbering.
+       html += '<tr>';
+       for (var i=Math.round(this.bytes.length*8/10); i >= 0; i--) {
+         var className = (i % 2) ? "odd" : "even";
+         var colspan = (i == 6) ? 4 : 10;
+         html += `<td colspan=${colspan} class="${className}">${i}</td>`;
+       }
+       html += '</tr>';
+
+       // Ones digits and nibble coloring.
+       html += '<tr>';
+       for (var i = 0; i < this.bytes.length; i++) {
+         for (var j = 0; j < 8; j++) {
+           var index = (this.bytes.length - i) * 8 - j - 1;
+           var className = j > 3 ? "nibble" : "dark nibble";
+           html += `<td class="${className}">${index % 10}</td>`;
+         }
+       }
+       html += '</tr>';
+
+       html += this.bitPaddingRow();
+       html += '<tr class="bit-input">';
+       for (var i = 0; i < this.bytes.length; i++) {
+         for (var j = 0; j < 8; j++) {
+           var index = i * 8 + j;
+           var className = index === 0 ? 'sign' :
+                           index < 1 + this.exponentBits ? 'exponent' : 'fraction';
+
+           if (index != 63 && (63-index) % 4 == 0) {
+             className += " nibble-boundary";
+           }
+
+           html += `<td data-bit-index="${index}" class="${className}">0</td>`;
+         }
+       }
+       html += this.bitPaddingRow();
+
+       html += '<tr>';
+       for (var i = 0; i < this.bytes.length; i++) {
+         html += `<td data-nibble-index="${2*i+0}" colspan=4 class="nibble hex dark">&nbsp;</td>`;
+         html += `<td data-nibble-index="${2*i+1}" colspan=4 class="nibble hex">&nbsp;</td>`;
+       }
+
+       html += '<td class="equals">=</td>';
+       html += `
+<td class="output">
+  <div class="output-box">
+    <span class="prefix">0x</span>
+    <input ${this.editable ? "" : "disabled"} class="hex output" spellcheck=false>
+  </div>
+</td>`;
+
+       html += '</tr>';
+
+       html += '<tr>';
+       html += '<td colspan=1 class="expansion sign">&nbsp</td>';
+       html += '<td colspan=11 class="expansion exponent">&nbsp</td>';
+       html += '<td colspan=52 class="expansion fraction">&nbsp</td>';
+       html += '<td class="equals">=</td>';
+       html += `
+<td class="output">
+  <div class="output-box">
+    <span class="prefix"></span>
+    <input ${this.editable ? "" : "disabled"} class="expansion output" spellcheck=false>
+  </div>
+</td>`;
+       html += '</tr>';
+
+       html += '</table>';
+       this.input.innerHTML = html;
+     }
+
+     setValue(value) {
+       this.array[0] = value;
+       this.render();
+       if (this.onvaluechange) {
+         this.onvaluechange(value);
+       }
+     }
+
+     get value() {
+       return this.array[0];
+     }
+
+     addEventHandlers() {
+       var _this = this;
+       var output = this.output;
+       var hex = this.hex;
+       var input = this.input;
+       var bytes = this.bytes;
+       var array = this.array;
+
+       output.onkeydown = function (e) {
+         if (e.which === 13) {
+           e.preventDefault();
+           output.blur();
+         }
+
+         else if (e.which === 38) {
+           e.preventDefault();
+           output.value = reduceNumber(_this.extractNumber() + 1);
+           output.select();
+           output.oninput();
+         }
+
+         else if (e.which === 40) {
+           e.preventDefault();
+           output.value = reduceNumber(_this.extractNumber() - 1);
+           output.select();
+           output.oninput();
+         }
+       };
+
+       output.onfocus = function () {
+         output.select();
+       };
+
+       output.oninput = function () {
+         _this.setValue(_this.extractNumber());
+       };
+
+       output.onblur = function () {
+         _this.render();
+       };
+
+       hex.onkeydown = function (e) {
+         if (e.which === 13) {
+           e.preventDefault();
+           hex.blur();
+         }
+       };
+
+       hex.onfocus = function () {
+         hex.select();
+       };
+
+       hex.oninput = function () {
+         var hexAlphabet = '0123456789abcdefABCDEF';
+         var validHexCharas = hex.value.split('').every(function (c) {
+           return hexAlphabet.split('').lastIndexOf(c) !== -1;
+         });
+         if (hex.value.length > (_this.hexLength * 2) || validHexCharas === false) {
+           hex.value = hex.value.slice(0, -1);
+           return;
+         }
+
+         var tmpBytes = toByteArray(hex.value);
+         bytes.fill(0);
+         bytes.set(tmpBytes.reverse(), _this.hexLength - tmpBytes.length);
+         _this.setValue(_this.value)
+       };
+
+       hex.onblur = function () {
+         _this.render();
+       };
+
+       input.onmousedown = function (e) {
+         if ('bitIndex' in e.target.dataset) {
+           var index = e.target.dataset.bitIndex | 0;
+           var byteIndex = bytes.length - (index >> 3) - 1;
+           var byteMask = 1 << (7 - (index & 7));
+           var mouseDownValue = bytes[byteIndex] & byteMask ? 0 : 1;
+
+           if (mouseDownValue) {
+             e.target.classList.add("set");
+           } else {
+             e.target.classList.remove("set");
+           }
+
+           bytes[byteIndex] ^= byteMask;
+           _this.setValue(_this.value);
+
+           document.onmousemove = function (e2) {
+             if ('bitIndex' in e2.target.dataset) {
+               var index = e2.target.dataset.bitIndex | 0;
+               var byteIndex = bytes.length - (index >> 3) - 1;
+               var byteMask = 1 << (7 - (index & 7));
+               bytes[byteIndex] = (bytes[byteIndex] & ~byteMask) | (byteMask * mouseDownValue);
+
+               if (mouseDownValue) {
+                 e2.target.classList.add("set");
+               } else {
+                 e2.target.classList.remove("set");
+               }
+
+               _this.setValue(_this.value);
+             }
+           };
+
+           document.onmouseup = function () {
+             document.onmousemove = null;
+             document.onmouseup = null;
+           };
+         }
+       };
+     }
+   }
+
+   function element(id) {
+     return document.getElementById(id);
+   }
+
+   var inputs = [];
+   inputs.push(new Floater(element('input64_0')));
+   inputs.push(new Floater(element('input64_1')));
+
+   var output = new Floater(element('output64'), false);
+
+   function setupPresets(input) {
+     for (var element of document.querySelectorAll(`div[data-input="${input}"] div[data-value]`)) {
+       element.onmouseover = function() { this.classList.add('hover'); };
+       element.onmouseout  = function() { this.classList.remove('hover'); };
+
+       element.onclick = function(e) {
+         inputs[input].setValue(eval(e.target.dataset.value));
+       }
+     }
+   }
+
+   function updateOutput() {
+     var element = document.querySelector(`div.operators div.selected[data-operator]`);
+     var input0 = inputs[0].value;
+     var input1 = inputs[1].value;
+     switch (element.dataset.operator) {
+       case 'add': output.setValue(input0+input1); break;
+       case 'sub': output.setValue(input0-input1); break;
+       case 'mul': output.setValue(input0*input1); break;
+       case 'div': output.setValue(input0/input1); break;
+     }
+   }
+   inputs[0].onvaluechange = updateOutput;
+   inputs[1].onvaluechange = updateOutput;
+
+   function setupOperators() {
+     var elements = document.querySelectorAll(`div.operators div[data-operator]`);
+     for (var element of elements) {
+       element.onmouseover = function() { this.classList.add('hover'); };
+       element.onmouseout  = function() { this.classList.remove('hover'); };
+
+       element.onclick = function(e) {
+         for (var other of elements) {
+           other.classList.remove("selected");
+         }
+         e.target.classList.add("selected");
+         updateOutput();
+       }
+     }
+   }
+
+   setupPresets(0);
+   setupPresets(1);
+   setupOperators();
+   updateOutput();
+
+})();
+
+</script>
+</body></html>
